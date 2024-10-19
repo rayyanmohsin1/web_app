@@ -8,12 +8,12 @@ pipeline {
         }
         stage('Build') {
             steps {
-                bat 'command_to_run_build'
+                bat 'mvn clean install'
             }
         }
         stage('Test') {
             steps {
-                bat 'command_to_run_build'
+                bat 'mvn test'
             }
         }
     }
