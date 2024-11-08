@@ -1,39 +1,54 @@
 pipeline {
     agent any
-    tools {
-        maven 'Maven 3.9.9'  // Use the name of the Maven installation from Global Tool Configuration
+
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        DOCKER_IMAGE_NAME = "rayyanmohsin/web_app"
     }
+
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                // Check out the repository
+                git url: 'https://github.com/rayyanmohsin1/web_app', branch: 'main'
             }
         }
-        stage('Build') {
+
+        stage('Build Maven Project') {
             steps {
-                bat 'mvn clean install'
+                // Run Maven to clean, compile, and package the project
+                bat 'mvn clean package'
             }
         }
-        stage('Test') {
+
+        stage('Docker Login') {
             steps {
-                bat 'mvn test'
+                script {
+                    docker.withRegistry('', DOCKER_HUB_CREDENTIALS) {
+                        echo 'Logged in to Docker Hub'
+                    }
+                }
             }
         }
-        stage('Deploy') {
-            when {
-                branch 'main'  // This stage runs only when the branch is 'main'
-            }
+
+        stage('Docker Build') {
             steps {
-                bat 'mvn deploy'  // Deploys the build artifact (if applicable)
+                script {
+                    // Build Docker image using Dockerfile in the root directory
+                    def app = docker.build("${DOCKER_IMAGE_NAME}")
+                }
             }
         }
-    }
-    post {
-        success {
-            echo 'Build and Test stages completed successfully.'
-        }
-        failure {
-            echo 'Build or Test stage failed.'
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    // Push Docker image to Docker Hub
+                    docker.withRegistry('', DOCKER_HUB_CREDENTIALS) {
+                        app.push('latest')
+                    }
+                }
+            }
         }
     }
 }
