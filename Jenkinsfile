@@ -23,10 +23,8 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                script {
-                    docker.withRegistry('', DOCKER_HUB_CREDENTIALS) {
-                        echo 'Logged in to Docker Hub'
-                    }
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
                 }
             }
         }
