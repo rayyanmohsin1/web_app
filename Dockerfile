@@ -1,14 +1,11 @@
-# Use a base image with JDK
-FROM openjdk:11-jdk
-
-# Set the working directory
+# Use an official Maven image to build the app
+FROM maven:3.8.4-jdk-11 as build
 WORKDIR /app
+COPY . .
+RUN mvn clean install
 
-# Copy the Maven build output from the target directory to /app
-COPY target/*.jar app.jar
-
-# Expose the port your application will run on
-EXPOSE 8080
-
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Use a smaller JDK base image to run the app
+FROM openjdk:11-jre-slim
+WORKDIR /app
+COPY --from=build /app/target/your-app.jar /app/your-app.jar
+ENTRYPOINT ["java", "-jar", "/app/your-app.jar"]
