@@ -1,39 +1,31 @@
 pipeline {
     agent any
-    environment {
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_IMAGE = "rayyanmohsin/web_app"
-    }
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/rayyanmohsin1/web_app', branch: 'main'
+                git 'https://github.com/rayyanmohsin1/web_app'
             }
         }
-        
         stage('Build Maven Project') {
             steps {
-                bat 'mvn clean package'
+                sh 'mvn clean install'
             }
         }
-        
         stage('Docker Login') {
             steps {
-                script {
-                    bat "docker login -u %DOCKER_HUB_CREDENTIALS_USR% -p %DOCKER_HUB_CREDENTIALS_PSW%"
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                 }
             }
         }
-        
         stage('Docker Build') {
             steps {
-                bat "docker build -t %DOCKER_IMAGE% ."
+                sh 'docker build -t rayyanmohsin/web_app .'
             }
         }
-        
         stage('Docker Push') {
             steps {
-                bat "docker push %DOCKER_IMAGE%"
+                sh 'docker push rayyanmohsin/web_app'
             }
         }
     }
