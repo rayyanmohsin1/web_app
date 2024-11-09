@@ -29,12 +29,11 @@ pipeline {
             }
         }
 
-
         stage('Docker Build') {
             steps {
                 script {
                     // Build Docker image using Dockerfile in the root directory
-                    def app = docker.build("${DOCKER_IMAGE_NAME}")
+                    app = docker.build(DOCKER_IMAGE_NAME)
                 }
             }
         }
